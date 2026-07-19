@@ -1,0 +1,311 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DailyPost AI - Content Planner & Banner Creator</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- html2canvas for exporting banners safely -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+              900: '#4c1d95',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen font-sans transition-colors duration-200">
+
+  <div class="flex flex-col min-h-screen">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 sm:px-6">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <i class="fa-solid fa-images text-lg"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-brand-600 to-indigo-500 bg-clip-text text-transparent">DailyPost AI Studio</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Write text copy & draft matching visual banners in one place</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button id="themeToggle" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Toggle Theme">
+            <i class="fa-solid fa-moon dark:hidden"></i>
+            <i class="fa-solid fa-sun hidden dark:block"></i>
+          </button>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Studio Active
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Studio Dashboard -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Left Column: Copy Generation & Planner Grid (5 Cols) -->
+      <section class="lg:col-span-5 space-y-6">
+        
+        <!-- Interactive Post Generator Card -->
+        <div class="bg-white dark:bg-slate-800/50 dark:backdrop-blur-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800/80 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-brand-500 text-base"></i>
+              <h2 class="text-base font-bold">1. Write / Generate Text</h2>
+            </div>
+            <span id="currentDateDisplay" class="text-xs font-semibold text-slate-500 dark:text-slate-400"></span>
+          </div>
+
+          <form id="generatorForm" class="space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Platform</label>
+                <select id="postPlatform" class="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                  <option value="LinkedIn">👔 LinkedIn</option>
+                  <option value="Twitter/X">🐦 Twitter/X</option>
+                  <option value="Instagram">📸 Instagram</option>
+                  <option value="Facebook">👥 Facebook</option>
+                </select>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tone</label>
+                <select id="postTone" class="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                  <option value="Professional & Insightful">Professional</option>
+                  <option value="Casual & Relatable">Casual</option>
+                  <option value="Inspirational & Energetic">Inspiring</option>
+                  <option value="Humorous & Witty">Humorous</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Specific Topic or Goal</label>
+              <input type="text" id="postTopic" placeholder="e.g., 3 productivity tips for work-life balance" class="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-slate-400">
+            </div>
+
+            <button type="submit" id="generateBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]">
+              <i class="fa-solid fa-sparkles"></i>
+              <span>Generate Copy</span>
+            </button>
+          </form>
+
+          <!-- Generated Output Area -->
+          <div id="outputContainer" class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 hidden">
+            <textarea id="generatedPostArea" rows="5" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"></textarea>
+            
+            <div class="flex gap-2 mt-2">
+              <button id="sendToBannerBtn" class="flex-1 text-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 p-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors font-medium">
+                <i class="fa-solid fa-arrow-right"></i> Send to Banner Graphic
+              </button>
+              <button id="copyPostBtn" class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 p-2 rounded-lg px-3 transition-colors" title="Copy Text">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+              <button id="savePostBtn" class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 p-2 rounded-lg px-3 transition-colors" title="Save to Planner">
+                <i class="fa-regular fa-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 30-Day Content Grid -->
+        <div class="bg-white dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-800/80 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <i class="fa-regular fa-calendar-days text-brand-500"></i>
+              <h2 class="text-base font-bold">Content Grid & Saved Posts</h2>
+            </div>
+            <span class="text-xs text-slate-400"><span id="savedCount">0</span>/30 Days Filled</span>
+          </div>
+          
+          <div class="grid grid-cols-6 gap-1.5 mb-4" id="plannerGrid">
+            <!-- Programmatically generating 30 Days -->
+          </div>
+
+          <!-- Active Editor panel for Selected Day -->
+          <div id="plannerDayEditor" class="hidden space-y-2 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center">
+              <span id="activeDayLabel" class="text-xs font-bold text-brand-600 dark:text-brand-400">Day 1</span>
+              <div class="flex gap-1.5">
+                <button id="useDayForBannerBtn" class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Send text to Banner</button>
+                <span class="text-slate-300 dark:text-slate-700">|</span>
+                <button id="clearActiveDayBtn" class="text-[11px] text-red-500 hover:underline">Clear</button>
+              </div>
+            </div>
+            <textarea id="activeDayText" rows="3" class="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"></textarea>
+            <button id="saveActiveDayBtn" class="w-full text-[11px] py-1 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg">Save Day changes</button>
+          </div>
+        </div>
+
+        <!-- Floating notifications -->
+        <div id="actionNotification" class="text-xs font-semibold text-center py-2 px-3 rounded-lg border transition-all duration-300 hidden"></div>
+
+      </section>
+
+      <!-- Right Column: Visual Banner Maker (7 Cols) -->
+      <section class="lg:col-span-7 space-y-6">
+        
+        <!-- Banner Creator Studio -->
+        <div class="bg-white dark:bg-slate-800/50 dark:backdrop-blur-md rounded-2xl p-5 border border-slate-200 dark:border-slate-800/80 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-palette text-brand-500 text-base"></i>
+              <h2 class="text-base font-bold">2. Design Today's Banner</h2>
+            </div>
+            <div class="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+              <button id="btnRatioSquare" class="px-2.5 py-1 text-xs font-semibold bg-white dark:bg-slate-700 rounded shadow-sm">Square 1:1</button>
+              <button id="btnRatioLandscape" class="px-2.5 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400 rounded">Landscape 16:9</button>
+              <button id="btnRatioPortrait" class="px-2.5 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400 rounded">Portrait 9:16</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+            
+            <!-- Customizer Controls (5 Columns) -->
+            <div class="md:col-span-5 space-y-4 text-xs">
+              
+              <!-- Color Presets -->
+              <div class="space-y-1.5">
+                <label class="font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Background Presets</label>
+                <div class="grid grid-cols-5 gap-1.5">
+                  <button class="w-full h-8 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 border border-white/20" onclick="changeBg('from-violet-600 to-indigo-600')"></button>
+                  <button class="w-full h-8 rounded-lg bg-gradient-to-r from-rose-500 to-orange-500 border border-white/20" onclick="changeBg('from-rose-500 to-orange-500')"></button>
+                  <button class="w-full h-8 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-700 border border-white/20" onclick="changeBg('from-emerald-500 to-teal-700')"></button>
+                  <button class="w-full h-8 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 border border-white/20" onclick="changeBg('from-blue-600 to-cyan-500')"></button>
+                  <button class="w-full h-8 rounded-lg bg-gradient-to-r from-zinc-800 to-zinc-950 border border-white/20" onclick="changeBg('from-zinc-800 to-zinc-950')"></button>
+                  
+                  <button class="w-full h-8 rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 border border-white/20" onclick="changeBg('from-pink-500 to-rose-500')"></button>
+                  <button class="w-full h-8 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 border border-white/20" onclick="changeBg('from-amber-500 to-yellow-500')"></button>
+                  <button class="w-full h-8 rounded-lg bg-gradient-to-r from-fuchsia-600 to-pink-600 border border-white/20" onclick="changeBg('from-fuchsia-600 to-pink-600')"></button>
+                  <button class="w-full h-8 rounded-lg bg-gradient-to-r from-violet-800 to-fuchsia-900 border border-white/20" onclick="changeBg('from-violet-800 to-fuchsia-900')"></button>
+                  <button class="w-full h-8 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-slate-500" onclick="changeBg('from-neutral-100 to-neutral-200 dark:from-neutral-800 dark:to-neutral-900')">
+                    <i class="fa-solid fa-paint-brush"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Manual Color Inputs -->
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block mb-1 text-slate-400 text-[10px]">Color 1</label>
+                  <input type="color" id="bgGradient1" value="#6d28d9" class="w-full h-8 rounded-lg cursor-pointer bg-transparent border border-slate-200 dark:border-slate-700">
+                </div>
+                <div>
+                  <label class="block mb-1 text-slate-400 text-[10px]">Color 2</label>
+                  <input type="color" id="bgGradient2" value="#4f46e5" class="w-full h-8 rounded-lg cursor-pointer bg-transparent border border-slate-200 dark:border-slate-700">
+                </div>
+              </div>
+
+              <!-- Custom image upload background -->
+              <div class="space-y-1.5">
+                <label class="font-semibold text-slate-400 uppercase tracking-wider text-[10px] flex justify-between">
+                  <span>Custom Background Image</span>
+                  <span id="removeBgImage" class="text-red-500 hover:underline cursor-pointer hidden">Remove Image</span>
+                </label>
+                <div class="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-3 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <input type="file" id="bannerBgUpload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                  <div class="flex flex-col items-center gap-1 text-slate-400">
+                    <i class="fa-regular fa-image text-lg"></i>
+                    <span class="text-[11px]">Click or drag to upload banner photo</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Text Customizer -->
+              <div class="space-y-2">
+                <label class="font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Text Controls</label>
+                
+                <div>
+                  <input type="text" id="bannerTitle" value="MAKE A STATEMENT TODAY" placeholder="Main Heading" class="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5">
+                </div>
+
+                <div>
+                  <textarea id="bannerSubtitle" rows="3" placeholder="Secondary supporting text..." class="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 resize-none">Customize this banner with your unique key findings, tips, or quotes. Looks incredible across every feed.</textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block mb-1 text-slate-400 text-[10px]">Title Color</label>
+                    <input type="color" id="titleColorPicker" value="#ffffff" class="w-full h-8 rounded-lg cursor-pointer bg-transparent border border-slate-200 dark:border-slate-700">
+                  </div>
+                  <div>
+                    <label class="block mb-1 text-slate-400 text-[10px]">Sub Color</label>
+                    <input type="color" id="subColorPicker" value="#f1f5f9" class="w-full h-8 rounded-lg cursor-pointer bg-transparent border border-slate-200 dark:border-slate-700">
+                  </div>
+                </div>
+
+                <!-- Alignment & Font Theme -->
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <div>
+                    <label class="block mb-1 text-slate-400 text-[10px]">Text Alignment</label>
+                    <div class="flex gap-1 border border-slate-200 dark:border-slate-700 p-0.5 rounded-lg bg-slate-50 dark:bg-slate-900">
+                      <button id="alignLeft" class="flex-1 py-1 rounded text-center hover:bg-white dark:hover:bg-slate-800"><i class="fa-solid fa-align-left"></i></button>
+                      <button id="alignCenter" class="flex-1 py-1 rounded bg-white dark:bg-slate-800 text-center"><i class="fa-solid fa-align-center"></i></button>
+                      <button id="alignRight" class="flex-1 py-1 rounded hover:bg-white dark:hover:bg-slate-800"><i class="fa-solid fa-align-right"></i></button>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block mb-1 text-slate-400 text-[10px]">Font Theme</label>
+                    <select id="fontTheme" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5">
+                      <option value="font-sans">Modern Sans</option>
+                      <option value="font-serif">Classic Serif</option>
+                      <option value="font-mono">Tech Mono</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Author Branding -->
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <label class="font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Branding Signature</label>
+                  <div class="grid grid-cols-2 gap-2 mt-1">
+                    <input type="text" id="bannerAuthorName" value="@YourBrand" placeholder="Handle/Name" class="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2">
+                    <input type="text" id="bannerAuthorRole" value="Web Creator" placeholder="Title/Website" class="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2">
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- Visual Preview Workspace (7 Columns) -->
+            <div class="md:col-span-7 flex flex-col justify-between items-center bg-slate-100 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/50">
+              
+              <!-- Canvas Container Frame -->
+              <div class="w-full flex items-center justify-center p-2 min-h-[340px]">
+                <div id="bannerCanvas" class="relative w-full aspect-square rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 p-8 flex flex-col justify-between overflow-hidden shadow-xl border border-white/10 transition-all font
