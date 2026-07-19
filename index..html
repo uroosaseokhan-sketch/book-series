@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -308,4 +307,535 @@
               
               <!-- Canvas Container Frame -->
               <div class="w-full flex items-center justify-center p-2 min-h-[340px]">
-                <div id="bannerCanvas" class="relative w-full aspect-square rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 p-8 flex flex-col justify-between overflow-hidden shadow-xl border border-white/10 transition-all font
+                <div id="bannerCanvas" class="relative w-full aspect-square rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 p-8 flex flex-col justify-between overflow-hidden shadow-xl border border-white/10 transition-all font-sans text-white text-center bg-cover bg-center">
+                  
+                  <!-- Gradient overlay for dark photo background readability -->
+                  <div id="canvasImgOverlay" class="absolute inset-0 bg-black/30 pointer-events-none hidden"></div>
+
+                  <!-- Badge/Header decoration -->
+                  <div class="z-10 flex justify-between items-center">
+                    <span class="text-[10px] font-bold tracking-[0.2em] bg-white/15 backdrop-blur px-2.5 py-1 rounded-full uppercase">Insight Daily</span>
+                    <i class="fa-solid fa-quote-right opacity-40 text-lg"></i>
+                  </div>
+
+                  <!-- Middle content text -->
+                  <div class="z-10 my-auto py-4 space-y-3">
+                    <h2 id="canvasTitle" class="text-xl sm:text-2xl font-black leading-tight tracking-tight uppercase">MAKE A STATEMENT TODAY</h2>
+                    <p id="canvasSubtitle" class="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed max-w-md mx-auto">Customize this banner with your unique key findings, tips, or quotes. Looks incredible across every feed.</p>
+                  </div>
+
+                  <!-- Footer branding signature -->
+                  <div class="z-10 pt-4 border-t border-white/10 flex justify-between items-center text-left">
+                    <div>
+                      <h4 id="canvasAuthorName" class="text-[11px] font-bold tracking-wide">@YourBrand</h4>
+                      <p id="canvasAuthorRole" class="text-[9px] text-white/70">Web Creator</p>
+                    </div>
+                    <span class="text-[10px] font-semibold text-white/50">dailypost.ai</span>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Downloader Tool -->
+              <div class="w-full mt-4 flex gap-2">
+                <button id="downloadBannerBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs rounded-xl py-3 px-4 shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]">
+                  <i class="fa-solid fa-cloud-arrow-down"></i>
+                  <span>Download High-Res Banner (PNG)</span>
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-6 px-4 mt-auto">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-wand-magic text-brand-500"></i>
+          <span>Driven by Gemini 2.5 Flash copy and instant visual generator layout engine.</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span>In-memory storage active</span>
+          <span>•</span>
+          <button id="resetAppBtn" class="hover:text-red-500 transition-colors">Clear Saved Data</button>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Config
+    const apiKey = "";
+    const modelName = "gemini-2.5-flash-preview-09-2025";
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'daily-post-planner';
+
+    // Application state
+    const state = {
+      selectedDay: 1,
+      savedPosts: {},
+      theme: 'light',
+      textAlign: 'center',
+      bannerBg: 'from-brand-600 to-indigo-600',
+      bannerRatio: 'square' // 'square', 'landscape', 'portrait'
+    };
+
+    // On Load Initialization
+    window.addEventListener('load', () => {
+      initDate();
+      initTheme();
+      loadSavedPlanner();
+      renderPlannerGrid();
+      updateSavedCountDisplay();
+      setupEventListeners();
+      syncFormToCanvas();
+    });
+
+    function initDate() {
+      const today = new Date();
+      const options = { weekday: 'long', month: 'short', day: 'numeric' };
+      document.getElementById('currentDateDisplay').textContent = today.toLocaleDateString('en-US', options);
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      state.theme = savedTheme;
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    function loadSavedPlanner() {
+      const saved = localStorage.getItem(`planner_posts_${appId}`);
+      if (saved) {
+        try {
+          state.savedPosts = JSON.parse(saved);
+        } catch (e) {
+          state.savedPosts = {};
+        }
+      }
+    }
+
+    function savePlannerToStorage() {
+      localStorage.setItem(`planner_posts_${appId}`, JSON.stringify(state.savedPosts));
+      updateSavedCountDisplay();
+    }
+
+    function updateSavedCountDisplay() {
+      const count = Object.keys(state.savedPosts).length;
+      document.getElementById('savedCount').textContent = count;
+    }
+
+    // Toggle Dark / Light Theme
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        state.theme = 'light';
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        state.theme = 'dark';
+      }
+    });
+
+    // Render 30-Day Planner Grid
+    function renderPlannerGrid() {
+      const grid = document.getElementById('plannerGrid');
+      grid.innerHTML = '';
+
+      for (let d = 1; d <= 30; d++) {
+        const hasContent = !!state.savedPosts[d];
+        const cell = document.createElement('button');
+        
+        let cellClass = `relative h-11 rounded-lg border flex flex-col items-center justify-center transition-all ${
+          state.selectedDay === d 
+          ? 'bg-brand-500 text-white border-brand-500 shadow' 
+          : hasContent 
+            ? 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-400' 
+            : 'bg-white dark:bg-slate-800/20 border-slate-200 dark:border-slate-800/60 hover:border-slate-300'
+        }`;
+
+        cell.className = cellClass;
+        cell.innerHTML = `
+          <span class="text-[11px] font-bold">${d}</span>
+          ${hasContent ? '<span class="absolute bottom-1 w-1 h-1 rounded-full bg-indigo-500 dark:bg-indigo-400"></span>' : ''}
+        `;
+
+        cell.addEventListener('click', () => selectPlannerDay(d));
+        grid.appendChild(cell);
+      }
+    }
+
+    function selectPlannerDay(day) {
+      state.selectedDay = day;
+      renderPlannerGrid();
+
+      const editor = document.getElementById('plannerDayEditor');
+      editor.classList.remove('hidden');
+      document.getElementById('activeDayLabel').textContent = `Day ${day} Content`;
+      
+      const textVal = state.savedPosts[day] || '';
+      document.getElementById('activeDayText').value = textVal;
+    }
+
+    // Preset color click handler
+    window.changeBg = function(gradientClasses) {
+      state.bannerBg = gradientClasses;
+      const canvas = document.getElementById('bannerCanvas');
+      
+      // Clear custom colors
+      document.getElementById('bgGradient1').value = '#6d28d9';
+      document.getElementById('bgGradient2').value = '#4f46e5';
+
+      canvas.className = canvas.className.replace(/from-\S+ to-\S+/g, gradientClasses);
+    };
+
+    // Manual Gradient Picker Event Listeners
+    const updateManualGradient = () => {
+      const col1 = document.getElementById('bgGradient1').value;
+      const col2 = document.getElementById('bgGradient2').value;
+      const canvas = document.getElementById('bannerCanvas');
+      canvas.style.backgroundImage = `linear-gradient(to top right, ${col1}, ${col2})`;
+    };
+    document.getElementById('bgGradient1').addEventListener('input', updateManualGradient);
+    document.getElementById('bgGradient2').addEventListener('input', updateManualGradient);
+
+    // Sync input form fields to canvas view in real-time
+    function syncFormToCanvas() {
+      const bannerTitle = document.getElementById('bannerTitle');
+      const bannerSubtitle = document.getElementById('bannerSubtitle');
+      const bannerAuthorName = document.getElementById('bannerAuthorName');
+      const bannerAuthorRole = document.getElementById('bannerAuthorRole');
+      const fontTheme = document.getElementById('fontTheme');
+      const titleColorPicker = document.getElementById('titleColorPicker');
+      const subColorPicker = document.getElementById('subColorPicker');
+
+      const canvasTitle = document.getElementById('canvasTitle');
+      const canvasSubtitle = document.getElementById('canvasSubtitle');
+      const canvasAuthorName = document.getElementById('canvasAuthorName');
+      const canvasAuthorRole = document.getElementById('canvasAuthorRole');
+      const canvas = document.getElementById('bannerCanvas');
+
+      // Sync Titles
+      bannerTitle.addEventListener('input', () => canvasTitle.textContent = bannerTitle.value.toUpperCase());
+      bannerSubtitle.addEventListener('input', () => canvasSubtitle.textContent = bannerSubtitle.value);
+      bannerAuthorName.addEventListener('input', () => canvasAuthorName.textContent = bannerAuthorName.value);
+      bannerAuthorRole.addEventListener('input', () => canvasAuthorRole.textContent = bannerAuthorRole.value);
+
+      // Colors
+      titleColorPicker.addEventListener('input', () => canvasTitle.style.color = titleColorPicker.value);
+      subColorPicker.addEventListener('input', () => canvasSubtitle.style.color = subColorPicker.value);
+
+      // Font updates
+      fontTheme.addEventListener('change', () => {
+        canvas.className = canvas.className.replace(/font-\S+/g, fontTheme.value);
+      });
+    }
+
+    // Text Alignments Click Listeners
+    document.getElementById('alignLeft').addEventListener('click', () => setAlign('left'));
+    document.getElementById('alignCenter').addEventListener('click', () => setAlign('center'));
+    document.getElementById('alignRight').addEventListener('click', () => setAlign('right'));
+
+    function setAlign(alignment) {
+      state.textAlign = alignment;
+      const canvas = document.getElementById('bannerCanvas');
+      const middleContent = canvas.querySelector('.my-auto');
+      
+      // Update Buttons highlight
+      document.getElementById('alignLeft').classList.remove('bg-white', 'dark:bg-slate-800');
+      document.getElementById('alignCenter').classList.remove('bg-white', 'dark:bg-slate-800');
+      document.getElementById('alignRight').classList.remove('bg-white', 'dark:bg-slate-800');
+
+      if (alignment === 'left') {
+        document.getElementById('alignLeft').classList.add('bg-white', 'dark:bg-slate-800');
+        canvas.className = canvas.className.replace(/text-\S+/g, 'text-left');
+        middleContent.classList.remove('mx-auto');
+      } else if (alignment === 'center') {
+        document.getElementById('alignCenter').classList.add('bg-white', 'dark:bg-slate-800');
+        canvas.className = canvas.className.replace(/text-\S+/g, 'text-center');
+        middleContent.classList.add('mx-auto');
+      } else {
+        document.getElementById('alignRight').classList.add('bg-white', 'dark:bg-slate-800');
+        canvas.className = canvas.className.replace(/text-\S+/g, 'text-right');
+        middleContent.classList.remove('mx-auto');
+      }
+    }
+
+    // Aspects and Ratios
+    document.getElementById('btnRatioSquare').addEventListener('click', () => setRatio('square'));
+    document.getElementById('btnRatioLandscape').addEventListener('click', () => setRatio('landscape'));
+    document.getElementById('btnRatioPortrait').addEventListener('click', () => setRatio('portrait'));
+
+    function setRatio(ratio) {
+      state.bannerRatio = ratio;
+      const canvas = document.getElementById('bannerCanvas');
+      
+      // Active Button highlights
+      document.getElementById('btnRatioSquare').className = "px-2.5 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400 rounded";
+      document.getElementById('btnRatioLandscape').className = "px-2.5 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400 rounded";
+      document.getElementById('btnRatioPortrait').className = "px-2.5 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400 rounded";
+
+      canvas.classList.remove('aspect-square', 'aspect-video', 'aspect-[9/16]');
+
+      if (ratio === 'square') {
+        document.getElementById('btnRatioSquare').className = "px-2.5 py-1 text-xs font-semibold bg-white dark:bg-slate-700 rounded shadow-sm";
+        canvas.classList.add('aspect-square');
+      } else if (ratio === 'landscape') {
+        document.getElementById('btnRatioLandscape').className = "px-2.5 py-1 text-xs font-semibold bg-white dark:bg-slate-700 rounded shadow-sm";
+        canvas.classList.add('aspect-video');
+      } else {
+        document.getElementById('btnRatioPortrait').className = "px-2.5 py-1 text-xs font-semibold bg-white dark:bg-slate-700 rounded shadow-sm";
+        canvas.classList.add('aspect-[9/16]');
+      }
+    }
+
+    // Background Image file Upload
+    document.getElementById('bannerBgUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const canvas = document.getElementById('bannerCanvas');
+          canvas.style.backgroundImage = `url('${event.target.result}')`;
+          document.getElementById('removeBgImage').classList.remove('hidden');
+          document.getElementById('canvasImgOverlay').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById('removeBgImage').addEventListener('click', () => {
+      const canvas = document.getElementById('bannerCanvas');
+      canvas.style.backgroundImage = '';
+      document.getElementById('removeBgImage').classList.add('hidden');
+      document.getElementById('canvasImgOverlay').classList.add('hidden');
+      updateManualGradient(); // Fallback to manual color settings
+    });
+
+    // Send generated text OR planner day text to the Banner
+    document.getElementById('sendToBannerBtn').addEventListener('click', () => {
+      const sourceText = document.getElementById('generatedPostArea').value;
+      sendTextToBanner(sourceText);
+    });
+
+    document.getElementById('useDayForBannerBtn').addEventListener('click', () => {
+      const sourceText = document.getElementById('activeDayText').value;
+      sendTextToBanner(sourceText);
+    });
+
+    function sendTextToBanner(text) {
+      if (!text) {
+        showActionNotification("No text to transfer. Write or generate some content first!", "rose");
+        return;
+      }
+      
+      // Extract first line as Title/Heading, rest as Subtitle
+      const lines = text.split('\n').filter(l => l.trim() !== '');
+      if (lines.length > 0) {
+        let proposedTitle = lines[0].replace(/[#*•-]/g, '').trim();
+        // Limit Title word length for visual layout aesthetics
+        if (proposedTitle.length > 35) {
+          proposedTitle = proposedTitle.substring(0, 32) + "...";
+        }
+        document.getElementById('bannerTitle').value = proposedTitle;
+        document.getElementById('canvasTitle').textContent = proposedTitle.toUpperCase();
+
+        let proposedSubtitle = lines.slice(1).join(' ').replace(/[#*•-]/g, '').trim();
+        if (proposedSubtitle.length > 150) {
+          proposedSubtitle = proposedSubtitle.substring(0, 147) + "...";
+        }
+        document.getElementById('bannerSubtitle').value = proposedSubtitle;
+        document.getElementById('canvasSubtitle').textContent = proposedSubtitle;
+
+        showActionNotification("Successfully synced content to graphic design space!", "emerald");
+      }
+    }
+
+    // Save Active Day Content from Editor
+    document.getElementById('saveActiveDayBtn').addEventListener('click', () => {
+      const txt = document.getElementById('activeDayText').value.trim();
+      const day = state.selectedDay;
+
+      if (txt) {
+        state.savedPosts[day] = txt;
+      } else {
+        delete state.savedPosts[day];
+      }
+
+      savePlannerToStorage();
+      renderPlannerGrid();
+      showActionNotification(`Day ${day} changes saved successfully!`, 'emerald');
+    });
+
+    // Clear Selected Day content
+    document.getElementById('clearActiveDayBtn').addEventListener('click', () => {
+      const day = state.selectedDay;
+      delete state.savedPosts[day];
+      document.getElementById('activeDayText').value = '';
+      savePlannerToStorage();
+      renderPlannerGrid();
+      showActionNotification(`Day ${day} data deleted.`, 'rose');
+    });
+
+    // Export Graphic to Local machine safely via html2canvas
+    document.getElementById('downloadBannerBtn').addEventListener('click', () => {
+      const canvasFrame = document.getElementById('bannerCanvas');
+      
+      // Temporarily remove rounded corner overflow styling to capture precise sharp graphics
+      canvasFrame.classList.remove('rounded-2xl');
+      
+      html2canvas(canvasFrame, {
+        useCORS: true,
+        allowTaint: true,
+        scale: 2 // Export with higher resolution scale for crisp visuals on social feeds
+      }).then((canvasImage) => {
+        canvasFrame.classList.add('rounded-2xl'); // Restore visual UI rounding
+        
+        const link = document.createElement('a');
+        link.download = `DailyPost_Banner_Day${state.selectedDay}.png`;
+        link.href = canvasImage.toDataURL('image/png');
+        link.click();
+        
+        showActionNotification("Banner exported and saved locally as high-res PNG!", "emerald");
+      }).catch((err) => {
+        console.error("Canvas export failed", err);
+        showActionNotification("Visual export failed. Try again.", "rose");
+      });
+    });
+
+    // Setup action notification banner
+    function showActionNotification(msg, colorType = 'emerald') {
+      const notification = document.getElementById('actionNotification');
+      notification.textContent = msg;
+      notification.className = `text-xs font-semibold text-center py-2 px-3 rounded-lg border transition-all duration-300 shadow `;
+      
+      if (colorType === 'emerald') {
+        notification.className += 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50';
+      } else if (colorType === 'rose') {
+        notification.className += 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/50';
+      } else {
+        notification.className += 'bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-400 dark:border-indigo-900/50';
+      }
+
+      notification.classList.remove('hidden');
+      setTimeout(() => {
+        notification.classList.add('hidden');
+      }, 4000);
+    }
+
+    // Reset App
+    document.getElementById('resetAppBtn').addEventListener('click', () => {
+      if (confirm("Reset everything? Your saved calendar content will be lost.")) {
+        state.savedPosts = {};
+        savePlannerToStorage();
+        renderPlannerGrid();
+        document.getElementById('plannerDayEditor').classList.add('hidden');
+        showActionNotification('Reset all planner slots successfully.', 'rose');
+      }
+    });
+
+    // API Post Generator Integration
+    async function fetchWithBackoff(url, payload, maxRetries = 5) {
+      let delay = 1000;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (response.ok) return await response.json();
+        } catch (error) {}
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2;
+      }
+      throw new Error("Unable to complete generation. Check connection.");
+    }
+
+    document.getElementById('generatorForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const generateBtn = document.getElementById('generateBtn');
+      const outputContainer = document.getElementById('outputContainer');
+      const postArea = document.getElementById('generatedPostArea');
+
+      const platform = document.getElementById('postPlatform').value;
+      const tone = document.getElementById('postTone').value;
+      const topic = document.getElementById('postTopic').value.trim() || "valuable professional life advice";
+
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Writing...`;
+      outputContainer.classList.add('hidden');
+
+      const systemInstruction = "You are an elite, highly organic social media copywriter. Write highly engaging, value-driven, structured, and realistic posts. Avoid robotic transitions.";
+      const userPrompt = `Write a premium post for ${platform}.
+      - Tone: ${tone}
+      - Topic: ${topic}
+      
+      Requirements:
+      1. Start with an attention-grabbing, clean hook.
+      2. Keep it compact (2 short paragraphs max).
+      3. Format it beautifully with spacing and line breaks. No emojis.`;
+
+      const requestPayload = {
+        contents: [{ parts: [{ text: userPrompt }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] }
+      };
+
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+      try {
+        const result = await fetchWithBackoff(endpoint, requestPayload);
+        const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (generatedText) {
+          const cleanText = generatedText.trim();
+          postArea.value = cleanText;
+          outputContainer.classList.remove('hidden');
+        }
+      } catch (error) {
+        showActionNotification(error.message, 'rose');
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = `<i class="fa-solid fa-sparkles"></i> <span>Generate Copy</span>`;
+      }
+    });
+
+    // Copy Generated Post
+    document.getElementById('copyPostBtn').addEventListener('click', () => {
+      const text = document.getElementById('generatedPostArea').value;
+      if (text) {
+        const temp = document.createElement('textarea');
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        showActionNotification('Post text copied!', 'emerald');
+      }
+    });
+
+    // Save Generated Post to Active Grid Day
+    document.getElementById('savePostBtn').addEventListener('click', () => {
+      const text = document.getElementById('generatedPostArea').value.trim();
+      if (text) {
+        state.savedPosts[state.selectedDay] = text;
+        savePlannerToStorage();
+        renderPlannerGrid();
+        selectPlannerDay(state.selectedDay);
+        showActionNotification(`Saved to Day ${state.selectedDay}!`, 'emerald');
+      }
+    });
+  </script>
+</body>
+</html>
